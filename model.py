@@ -29,7 +29,7 @@ class ES(torch.nn.Module):
         self.linear_final = nn.Linear(attention_hidden_size_2, 2)
         self.activate = torch.tanh
         self.epsilon = 1e-6
-
+    # Classify vessels' states according to their type
     def cope_state(self, state):
         filter_berthed = (state[:, 1] > -self.epsilon) & (state[:, 3] > 0)
         filter_waiting = (state[:, 1] < 0) & (state[:, 5] <= self.epsilon)
@@ -53,6 +53,7 @@ class ES(torch.nn.Module):
 
         return seq1, seq2, seq3, id
 
+    # The available berth position is extracted from the state
     def get_pos(self, state, length):
         filter_berthed = (state[:, 1] > -self.epsilon) & (state[:, 3] > 0)
         if torch.sum(filter_berthed) == 0:

@@ -312,9 +312,9 @@ public:
 	}
 
 
-	std::array<std::array<double, 9>, state_number> get_state() {
+	std::array<std::array<double, 8>, state_number> get_state() {
 
-		std::array<std::array<double, 9>, state_number> state;
+		std::array<std::array<double, 8>, state_number> state;
 
 		int count = 0;
 		int id = step_id;
@@ -330,7 +330,6 @@ public:
 			state[count][5] = std::max(0.0, vessel_arrival_time[index] - time); 
 			state[count][6] = 1.0 * (vessel_max_crane[index]) / num_cranes; 
 			state[count][7] = 1.0 * std::get<2>(solution[index]) / num_cranes; 
-            state[count][8] = index; 
 			count++;
 		}
 
@@ -343,19 +342,18 @@ public:
 			state[count][5] = vessel_arrival_time[id] - time;
 			state[count][6] = 1.0 * (vessel_max_crane[id]) / num_cranes;
 			state[count][7] = 1.0 * std::get<2>(solution[id]) / num_cranes; 
-            state[count][8] = id;
 			count++;
 			id++;
 		}
 
 		while (count < state_number) {
-			state[count] = { 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+			state[count] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 			count++;
 		}
 
 		return state;
 	}
-	std::tuple<std::array<std::array<double, 9>, state_number>, double, bool>
+	std::tuple<std::array<std::array<double, 8>, state_number>, double, bool>
 		step(std::array<double, 5> action) {
 		double all_step_time = wait_time;
 		int arrival_vessel_num = std::min(state_number, static_cast<int>(arrival_vessel.size()));
@@ -569,7 +567,7 @@ public:
 		return num_vessel == count;
 	}
 
-	std::array<std::array<double, 9>, state_number> reset() {
+	std::array<std::array<double, 8>, state_number> reset() {
 		time = 0.0;
 		wait_time = 0.0;
 		double t = vessel_arrival_time[0];
@@ -578,7 +576,7 @@ public:
 	}
 
 	void printState() {
-		const std::array<std::array<double, 9>, state_number>& state = get_state();
+		const std::array<std::array<double, 8>, state_number>& state = get_state();
 		std::cout << "State: " << time << std::endl;
 		for (const auto& vessel : state) {
 			for (const auto& value : vessel) {
@@ -603,7 +601,7 @@ public:
 
 
 struct Array2D {
-    double data[BerthOptimizationEnvironment::state_number][9];
+    double data[BerthOptimizationEnvironment::state_number][8];
 };
 
 
@@ -625,7 +623,7 @@ extern "C" {
     __declspec(dllexport) void step(BerthOptimizationEnvironment* env, std::array<double, 5> action, StepResult* result) {
         auto [state, reward, done] = env->step(action);
         for (int i = 0; i < BerthOptimizationEnvironment::state_number; ++i) {
-            for (int j = 0; j < 9; ++j) {
+            for (int j = 0; j < 8; ++j) {
                 result->state.data[i][j] = state[i][j];
             }
         }
@@ -636,7 +634,7 @@ extern "C" {
     __declspec(dllexport) void reset(BerthOptimizationEnvironment* env, Array2D* arr) {
         auto state = env->reset();
         for (int i = 0; i < BerthOptimizationEnvironment::state_number; ++i) {
-            for (int j = 0; j < 9; ++j) {
+            for (int j = 0; j < 8; ++j) {
                 arr->data[i][j] = state[i][j];
             }
         }

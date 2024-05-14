@@ -1,9 +1,6 @@
 import ctypes
 import numpy as np
-import torch
-from model import ES
-import numpy as np
-from torch.autograd import Variable
+
 
 class Bay_Env:
     def __init__(self, file):
@@ -16,9 +13,9 @@ class Bay_Env:
         class Array2D(ctypes.Structure):
             _pack_ = 1
             _fields_ = [("data", ctypes.c_double * 8 * self.state_number)]
-            
-                    
-        
+
+
+
         class StepResult(ctypes.Structure):
             _pack_ = 1
             _fields_ = [("state", ctypes.c_double * 8 * self.state_number),
@@ -36,25 +33,27 @@ class Bay_Env:
         self.delete_env.argtypes = [ctypes.c_void_p]
         self.delete_env.restype = None
 
-        self.step_func = self.dll.stepp
-        self.step_func.argtypes = [ctypes.POINTER(ctypes.c_double),ctypes.c_void_p,ctypes.c_void_p]
+        self.step_func = self.dll.step
+        self.step_func.argtypes = [ctypes.c_void_p, ctypes.c_double * 5,
+                                   ctypes.POINTER(self.StepResult)]
         self.step_func.restype = None
 
         self.reset_func = self.dll.reset
-        self.reset_func.argtypes = [ctypes.POINTER(self.Array2D),ctypes.c_void_p]
+        self.reset_func.argtypes = [ctypes.c_void_p, ctypes.POINTER(self.Array2D)]
         self.reset_func.restype = None
         self.env = self.create_env(file.encode('utf-8'))
 
     def step(self, action):
         result = self.StepResult()
         action_arr = (ctypes.c_double * 5)(*action)
-        self.step_func(action_arr,ctypes.byref(result),self.env)
+        self.step_func(self.env, action_arr, result)
         state = np.array(result.state).reshape((self.state_number, 8))
         return state, result.reward, result.done, None, None
 
+
     def reset(self):
         arr = self.Array2D()
-        self.reset_func(arr,self.env)
+        self.reset_func(self.env, arr)
         state = np.array(arr.data).reshape((self.state_number, 8))
         return state
 
